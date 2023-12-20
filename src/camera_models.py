@@ -17,7 +17,7 @@ class CameraModel(torch.nn.Module):
         else:
             self.register_buffer('data', params, persistent=True)
 
-    def distortion(self, x: torch.Tensor, y: torch.Tensor, extra_params: torch.Tensor) -> tuple:
+    def _distortion(self, x: torch.Tensor, y: torch.Tensor, extra_params: torch.Tensor) -> tuple:
         raise NotImplementedError
 
     def forward(self, verts: torch.Tensor) -> torch.Tensor:
@@ -35,7 +35,7 @@ class CameraModel(torch.nn.Module):
         y /= z
 
         # Radial / tangential distortion
-        dx, dy = self.distortion(x, y, extra_params=self.data[4:])
+        dx, dy = self._distortion(x, y, extra_params=self.data[4:])
 
         # Pixel coordinates
         fx, fy, cx, cy = self.data[:4]
@@ -46,9 +46,12 @@ class CameraModel(torch.nn.Module):
 
 class OpenCVCameraModel(CameraModel):
     def __init__(self, params: tuple, trainable: bool = True) -> None:
+        """Pytorch implementation of OpenCV camera model. For details, see:
+        https://github.com/colmap/colmap/blob/main/src/colmap/sensor/models.h
+        """
         super().__init__(params=params, trainable=trainable)
 
-    def distortion(self, x: torch.Tensor, y: torch.Tensor, extra_params: torch.Tensor) -> tuple:
+    def _distortion(self, x: torch.Tensor, y: torch.Tensor, extra_params: torch.Tensor) -> tuple:
         k1, k2, p1, p2 = extra_params
         x2 = x * x
         xy = x * y
