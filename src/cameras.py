@@ -11,7 +11,7 @@ class PerspectiveCamera(torch.nn.Module):
             camera_model: CameraModel, 
             trainable: bool = True
             ) -> None:
-        """Pytorch implementation of a perspective camera.
+        """Pytorch implementation of a basic perspective camera.
 
         Args:
             location (Iterable):        Location of camera origin in world of the form (x, y, z).
@@ -32,13 +32,16 @@ class PerspectiveCamera(torch.nn.Module):
 
         self.camera_model = camera_model
 
-    def get_3x3_rotation_matrix(self) -> torch.Tensor:
+    def qvec_to_3x3_rotation_matrix(self, qvec: torch.Tensor) -> torch.Tensor:
         """Converts a 4D vector of quaternions (qw, qx, qy, qz) to a 3x3 rotation matrix.
+
+        Args:
+            qvec (torch.Tensor): Quaternion vector (qw, qx, qy, qz).
 
         Returns:
             torch.Tensor: Rotation matrix of shape (3, 3).
         """
-        qw, qx, qy, qz = self.qvec
+        qw, qx, qy, qz = qvec
 
         r00 = 1 - 2 * qy ** 2 - 2 * qz ** 2
         r01 = 2 * qx * qy - 2 * qw * qz
@@ -68,7 +71,7 @@ class PerspectiveCamera(torch.nn.Module):
         Returns:
             torch.Tensor: Matrix of vertices with shape (N, 3).
         """
-        rot = self.get_3x3_rotation_matrix()
+        rot = self.qvec_to_3x3_rotation_matrix(self.qvec)
         return torch.matmul(verts, rot.t()) + self.tvec 
     
     def forward(self, verts: torch.Tensor) -> torch.Tensor:
