@@ -81,7 +81,7 @@ class PerspectiveCamera(torch.nn.Module):
             verts (torch.Tensor): Matrix of vertices with shape (N, 3).
 
         Returns:
-            torch.Tensor: Matrix of image coordinates (N, 3).
+            torch.Tensor: Matrix of image coordinates (N, 2).
         """
         uvw = self.world_to_cam(verts)
         return self.camera_model(uvw)
